@@ -1,14 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from './firebase'; // Firebase auth and Firestore
+import { setDoc, doc } from 'firebase/firestore'; // Firestore methods
+import { toast } from 'react-toastify'; // For success/error popups
 
 const Signup = () => {
-    const handleSubmit = (e, role) => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [fname, setFname] = useState("");
+    const [lname, setLname] = useState("");
+    const [role, setRole] = useState(""); // For role selection (citizen/leader)
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Redirect logic based on role
-        if (role === 'citizen') {
-            window.location.href = '/citizen-dashboard';
-        } else if (role === 'leader') {
-            window.location.href = '/leader-dashboard';
+        try {
+            // Create user with Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Save user data to Firestore
+            await setDoc(doc(db, 'Users', user.uid), {
+                email: user.email,
+                firstName: fname,
+                lastName: lname,
+                role: role, // Store the role in Firestore
+                photo: ""
+            });
+            console.log("User registered successfully");
+            // Toast success message
+            toast.success("User Registered Successfully!", {
+                position: "top-center",
+            });
+
+            // Role-based redirection after signup
+            if (role === 'citizen') {
+                window.location.href = '/citizen-dashboard';
+            } else if (role === 'leader') {
+                window.location.href = '/leader-dashboard';
+            }
+
+        } catch (error) {
+            console.error(error.message);
+            toast.error(error.message, {
+                position: "bottom-center",
+            });
         }
     };
 
@@ -36,19 +72,33 @@ const Signup = () => {
                 <div className="container mx-auto px-6">
                     <h1 className="text-3xl font-bold text-center mb-12 text-gray-800">Sign Up</h1>
                     <div className="flex flex-wrap justify-center gap-12">
-                        {/* Citizen Signup Form */}
+                        {/* Common Signup Form */}
                         <div className="w-full md:w-1/2 lg:w-1/3">
                             <div className="bg-white p-8 rounded-lg shadow-md">
-                                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Sign Up as a Citizen</h2>
-                                <form onSubmit={(e) => handleSubmit(e, 'citizen')}>
+                                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Sign Up</h2>
+                                <form onSubmit={handleSubmit}>
                                     <div className="mb-4">
-                                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                                        <label htmlFor="fname" className="block text-sm font-medium text-gray-700">First Name</label>
                                         <input
                                             type="text"
-                                            id="name"
-                                            name="name"
-                                            placeholder="Full Name"
+                                            id="fname"
+                                            name="fname"
+                                            placeholder="First Name"
                                             required
+                                            value={fname}
+                                            onChange={(e) => setFname(e.target.value)}
+                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label htmlFor="lname" className="block text-sm font-medium text-gray-700">Last Name</label>
+                                        <input
+                                            type="text"
+                                            id="lname"
+                                            name="lname"
+                                            placeholder="Last Name"
+                                            value={lname}
+                                            onChange={(e) => setLname(e.target.value)}
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
                                     </div>
@@ -60,6 +110,8 @@ const Signup = () => {
                                             name="email"
                                             placeholder="Email"
                                             required
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
                                     </div>
@@ -71,68 +123,27 @@ const Signup = () => {
                                             name="password"
                                             placeholder="Password"
                                             required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
                                     </div>
-                                    <button
-                                        type="submit"
-                                        className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:bg-blue-500 transition"
-                                    >
-                                        Sign Up
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
 
-                        {/* Leader Signup Form */}
-                        <div className="w-full md:w-1/2 lg:w-1/3">
-                            <div className="bg-white p-8 rounded-lg shadow-md">
-                                <h2 className="text-2xl font-semibold text-gray-800 mb-6">Sign Up as a Leader</h2>
-                                <form onSubmit={(e) => handleSubmit(e, 'leader')}>
+                                    {/* Role selection */}
                                     <div className="mb-4">
-                                        <label htmlFor="name-leader" className="block text-sm font-medium text-gray-700">Full Name</label>
-                                        <input
-                                            type="text"
-                                            id="name-leader"
-                                            name="name-leader"
-                                            placeholder="Full Name"
+                                        <label className="block text-sm font-medium text-gray-700">Role</label>
+                                        <select
+                                            value={role}
+                                            onChange={(e) => setRole(e.target.value)}
                                             required
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        />
+                                        >
+                                            <option value="" disabled>Select your role</option>
+                                            <option value="citizen">Citizen</option>
+                                            <option value="leader">Leader</option>
+                                        </select>
                                     </div>
-                                    <div className="mb-4">
-                                        <label htmlFor="email-leader" className="block text-sm font-medium text-gray-700">Email</label>
-                                        <input
-                                            type="email"
-                                            id="email-leader"
-                                            name="email-leader"
-                                            placeholder="Email"
-                                            required
-                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        />
-                                    </div>
-                                    <div className="mb-4">
-                                        <label htmlFor="password-leader" className="block text-sm font-medium text-gray-700">Password</label>
-                                        <input
-                                            type="password"
-                                            id="password-leader"
-                                            name="password-leader"
-                                            placeholder="Password"
-                                            required
-                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        />
-                                    </div>
-                                    <div className="mb-4">
-                                        <label htmlFor="position" className="block text-sm font-medium text-gray-700">Position</label>
-                                        <input
-                                            type="text"
-                                            id="position"
-                                            name="position"
-                                            placeholder="Position"
-                                            required
-                                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        />
-                                    </div>
+
                                     <button
                                         type="submit"
                                         className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:bg-blue-500 transition"
@@ -155,3 +166,5 @@ const Signup = () => {
 };
 
 export default Signup;
+
+

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './firebase'; // Import your Firebase configuration
+import { toast } from 'react-toastify'; // Make sure to install react-toastify
 
 const Login = () => {
     const navigate = useNavigate();
@@ -37,23 +40,30 @@ const Login = () => {
         // If all validations pass
         setError('');
 
-        // Simulate authentication and role determination
-        const userRole = email.includes('leader') ? 'leader' : 'citizen';
-
-        // Simulate async operation
         try {
-            // Simulate an API call or authentication process
-            await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
+            // Firebase authentication
+            await signInWithEmailAndPassword(auth, email, password);
 
-            // Redirect based on user role
+            // Determine the role and navigate to the appropriate dashboard
+            const userRole = email.includes('leader') ? 'leader' : 'citizen';
             if (userRole === 'leader') {
                 navigate('/leader-dashboard');
             } else {
                 navigate('/citizen-dashboard');
             }
+
+            // Optionally, show a success message
+            toast.success('User logged in Successfully', {
+                position: 'top-center',
+            });
+
         } catch (err) {
-            // Handle errors (e.g., network or authentication errors)
-            setError('An error occurred during login. Please try again.');
+            // Handle Firebase authentication errors
+            const errorMessage = err.message || 'An error occurred during login. Please try again.';
+            setError(errorMessage);
+            toast.error(errorMessage, {
+                position: 'bottom-center',
+            });
         }
     };
 
@@ -66,41 +76,13 @@ const Login = () => {
                         Civic Network
                     </Link>
                     <ul className="flex space-x-6">
-                        <li>
-                            <Link to="/" className="hover:text-blue-300">
-                                Home
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/report" className="hover:text-blue-300">
-                                Report Issue
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/track" className="hover:text-blue-300">
-                                Track Issues
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/about" className="hover:text-blue-300">
-                                About Us
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/contact" className="hover:text-blue-300">
-                                Contact Us
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/login" className="bg-blue-600 px-3 py-1 rounded-md">
-                                Login
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/signup" className="hover:text-blue-300">
-                                Sign Up
-                            </Link>
-                        </li>
+                        <li><Link to="/" className="hover:text-blue-300">Home</Link></li>
+                        <li><Link to="/report" className="hover:text-blue-300">Report Issue</Link></li>
+                        <li><Link to="/track" className="hover:text-blue-300">Track Issues</Link></li>
+                        <li><Link to="/about" className="hover:text-blue-300">About Us</Link></li>
+                        <li><Link to="/contact" className="hover:text-blue-300">Contact Us</Link></li>
+                        <li><Link to="/login" className="bg-blue-600 px-3 py-1 rounded-md">Login</Link></li>
+                        <li><Link to="/signup" className="hover:text-blue-300">Sign Up</Link></li>
                     </ul>
                 </nav>
             </header>
@@ -159,15 +141,9 @@ const Login = () => {
             <footer className="bg-gray-900 text-white py-4 text-center">
                 <p>&copy; 2024 Civic Network. All rights reserved.</p>
                 <div className="flex justify-center space-x-4 mt-2">
-                    <Link to="/contact" className="hover:text-blue-300">
-                        Contact Us
-                    </Link>
-                    <Link to="/privacy" className="hover:text-blue-300">
-                        Privacy Policy
-                    </Link>
-                    <Link to="/terms" className="hover:text-blue-300">
-                        Terms of Service
-                    </Link>
+                    <Link to="/contact" className="hover:text-blue-300">Contact Us</Link>
+                    <Link to="/privacy" className="hover:text-blue-300">Privacy Policy</Link>
+                    <Link to="/terms" className="hover:text-blue-300">Terms of Service</Link>
                 </div>
             </footer>
         </div>
@@ -175,3 +151,4 @@ const Login = () => {
 };
 
 export default Login;
+

@@ -1,49 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { db, storage } from './firebase';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'; // Updated imports
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Updated imports
+import { toast } from 'react-toastify';
 
 const ReportIssue = ({ isAuthenticated, userRole }) => {
-    // State for form inputs and error messages
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [category, setCategory] = useState('pothole');
     const [image, setImage] = useState(null);
     const [errors, setErrors] = useState({ title: '', description: '', location: '', image: '' });
+    const [leaders, setLeaders] = useState([]);
+    const [selectedLeaders, setSelectedLeaders] = useState([]);
 
-    // Helper function to check if the string is alphanumeric or alphabetic
     const isAlphaNumeric = (str) => /^[a-zA-Z0-9\s]+$/.test(str);
 
-    // Validate form inputs
     const validateForm = () => {
         let isValid = true;
         const newErrors = { title: '', description: '', location: '', image: '' };
 
-        // Title validation
         if (!isAlphaNumeric(title) || title.length < 5) {
             newErrors.title = 'The issue title must be at least 5 characters long and contain only alphabets or alphanumeric characters.';
             isValid = false;
         }
 
-        // Description validation
-        if (!isAlphaNumeric(description) || description.length < 10) {
-            newErrors.description = 'The description must be at least 10 characters long and contain only alphabets or alphanumeric characters.';
+        if (!/^[a-zA-Z\s]+$/.test(description) && !/^[a-zA-Z0-9\s]+$/.test(description)) {
+            newErrors.description = 'The description must contain only alphabets, alphanumeric characters, or spaces.';
             isValid = false;
         }
 
-        // Location validation
         if (!isAlphaNumeric(location) || location.length < 5) {
             newErrors.location = 'The location must be at least 5 characters long and contain only alphabets or alphanumeric characters.';
             isValid = false;
         }
 
-        // Image validation
         if (!image) {
             newErrors.image = 'Please upload an image.';
             isValid = false;
         } else {
-            const validImageTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+            const validImageTypes = ['image/jpeg', 'image/png'];
             if (!validImageTypes.includes(image.type)) {
-                newErrors.image = 'Please upload a valid image file (JPEG, PNG, SVG).';
+                newErrors.image = 'Please upload a valid image file (JPEG, PNG).';
                 isValid = false;
             }
         }
@@ -52,26 +51,61 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
         return isValid;
     };
 
-    // Handle form submission
-    const handleSubmit = (e) => {
+    const fetchLeaders = async () => {
+        try {
+            const leadersRef = collection(db, 'leaders');
+            const q = query(leadersRef, where('category', '==', category));
+            const querySnapshot = await getDocs(q);
+            const fetchedLeaders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setLeaders(fetchedLeaders);
+        } catch (error) {
+            console.error("Error fetching leaders:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (category) fetchLeaders();
+    }, [category]);
+
+    const handleImageUpload = async () => {
+        if (image) {
+            const imageRef = ref(storage, `images/${image.name}`);
+            await uploadBytes(imageRef, image);
+            return await getDownloadURL(imageRef);
+        }
+        return null;
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validateForm()) {
-            // Process form submission here, e.g., send data to server
-            alert('Your issue has been successfully reported!');
-
-            // Clear the form
-            setTitle('');
-            setDescription('');
-            setLocation('');
-            setCategory('pothole');
-            setImage(null);
-            setErrors({ title: '', description: '', location: '', image: '' });
+            try {
+                const imageUrl = await handleImageUpload();
+                await addDoc(collection(db, 'issues'), {
+                    title,
+                    description,
+                    location,
+                    category,
+                    imageUrl,
+                    taggedLeaders: selectedLeaders,
+                });
+                toast.success('Your issue has been successfully reported!');
+                setTitle('');
+                setDescription('');
+                setLocation('');
+                setCategory('pothole');
+                setImage(null);
+                setSelectedLeaders([]);
+                setErrors({ title: '', description: '', location: '', image: '' });
+            } catch (error) {
+                console.error("Error reporting issue:", error);
+                toast.error('There was an error reporting your issue.');
+            }
         }
     };
 
     return (
         <div className="bg-gray-100 font-sans">
-            {/* Navigation Bar */}
             <header className="bg-gray-900 text-white shadow-lg">
                 <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
                     <Link to="/" className="text-2xl font-bold">
@@ -83,8 +117,6 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                                 Home
                             </Link>
                         </li>
-
-                        {/* For all users, including guests */}
                         <li>
                             <Link to="/report" className="bg-blue-600 px-3 py-1 rounded-md">
                                 Report Issue
@@ -95,8 +127,6 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                                 Track Issues
                             </Link>
                         </li>
-
-                        {/* Show different dashboard links based on user role */}
                         {isAuthenticated && userRole === 'citizen' && (
                             <li>
                                 <Link to="/citizendashboard" className="hover:text-blue-300">
@@ -111,7 +141,6 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                                 </Link>
                             </li>
                         )}
-
                         <li>
                             <Link to="/about" className="hover:text-blue-300">
                                 About Us
@@ -129,7 +158,6 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                 </nav>
             </header>
 
-            {/* Report Issue Section */}
             <section className="py-12 bg-gray-100">
                 <div className="container mx-auto px-6">
                     <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Report an Issue</h1>
@@ -188,7 +216,6 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                                 name="location"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
-                                placeholder="Auto-filled or manually enter location"
                                 className={`w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.location ? 'border-red-500' : ''}`}
                             />
                             {errors.location && <p className="text-red-500 text-sm">{errors.location}</p>}
@@ -201,17 +228,29 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                                 type="file"
                                 id="image"
                                 name="image"
-                                accept="image/*"
                                 onChange={(e) => setImage(e.target.files[0])}
-                                className={`w-full text-gray-500 ${errors.image ? 'border-red-500' : ''}`}
+                                className={`w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.image ? 'border-red-500' : ''}`}
                             />
                             {errors.image && <p className="text-red-500 text-sm">{errors.image}</p>}
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out"
-                        >
-                            Submit Issue
+                        <div className="mb-4">
+                            <label htmlFor="leaders" className="block text-lg font-semibold text-gray-800 mb-2">
+                                Tag Leaders (optional)
+                            </label>
+                            <select
+                                id="leaders"
+                                multiple
+                                value={selectedLeaders}
+                                onChange={(e) => setSelectedLeaders([...e.target.selectedOptions].map(option => option.value))}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                {leaders.map(leader => (
+                                    <option key={leader.id} value={leader.id}>{leader.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <button type="submit" className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none">
+                            Report Issue
                         </button>
                     </form>
                 </div>
@@ -221,3 +260,6 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
 };
 
 export default ReportIssue;
+
+
+

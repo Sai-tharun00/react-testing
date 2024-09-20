@@ -34,8 +34,7 @@ const Services = () => {
                         <li><Link to="/" className="hover:text-blue-300">Home</Link></li>
                         <li><Link to="/about" className="hover:text-blue-300">About</Link></li>
                         <li><Link to="/services" className="bg-blue-600 px-3 py-1 rounded-md">Services</Link></li>
-                        <li><Link to="/report" className="hover:text-blue-300">Report</Link></li>
-                        <li><Link to="/track" className="hover:text-blue-300">Track</Link></li>
+                
                         {userRole === 'leader' && (
                             <li><Link to="/leader-dashboard" className="hover:text-blue-300">Leader Dashboard</Link></li>
                         )}
@@ -44,9 +43,9 @@ const Services = () => {
                         )}
                         {userRole === 'guest' && (
                             <>
-                                <li><Link to="/contact" className="hover:text-blue-300">Contact</Link></li>
+                                <li><Link to="/help" className="hover:text-blue-300">Help</Link></li>
                                 <li><Link to="/login" className="hover:text-blue-300">Login</Link></li>
-                                <li><Link to="/signup" className="hover:text-blue-300">Sign Up</Link></li>
+                                <li><Link to="/choose" className="hover:text-blue-300">Sign Up</Link></li>
                             </>
                         )}
                     </ul>

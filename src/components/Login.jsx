@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './firebase'; // Import your Firebase configuration
 import { toast } from 'react-toastify'; // Make sure to install react-toastify
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; // Eye icon from react-icons
 
 const Login = () => {
     const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Login = () => {
     // State for form inputs and error messages
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
     const [error, setError] = useState('');
 
     // Validation functions
@@ -67,6 +69,11 @@ const Login = () => {
         }
     };
 
+    // Toggle password visibility
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className="bg-gray-100 font-sans">
             {/* Navigation Bar */}
@@ -77,12 +84,10 @@ const Login = () => {
                     </Link>
                     <ul className="flex space-x-6">
                         <li><Link to="/" className="hover:text-blue-300">Home</Link></li>
-                        <li><Link to="/report" className="hover:text-blue-300">Report Issue</Link></li>
-                        <li><Link to="/track" className="hover:text-blue-300">Track Issues</Link></li>
                         <li><Link to="/about" className="hover:text-blue-300">About Us</Link></li>
-                        <li><Link to="/contact" className="hover:text-blue-300">Contact Us</Link></li>
+                        <li><Link to="/help" className="hover:text-blue-300">Help</Link></li>
                         <li><Link to="/login" className="bg-blue-600 px-3 py-1 rounded-md">Login</Link></li>
-                        <li><Link to="/signup" className="hover:text-blue-300">Sign Up</Link></li>
+                        <li><Link to="/choose" className="hover:text-blue-300">Sign Up</Link></li>
                     </ul>
                 </nav>
             </header>
@@ -106,12 +111,12 @@ const Login = () => {
                                 className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${error.includes('email') ? 'border-red-500' : ''}`}
                             />
                         </div>
-                        <div className="mb-6">
+                        <div className="mb-6 relative">
                             <label htmlFor="password" className="block text-gray-700 mb-2">
                                 Password
                             </label>
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 id="password"
                                 name="password"
                                 value={password}
@@ -119,6 +124,13 @@ const Login = () => {
                                 required
                                 className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${error.includes('Password') ? 'border-red-500' : ''}`}
                             />
+                            {/* Eye Icon */}
+                            <div
+                                className="absolute right-3 top-10 cursor-pointer text-gray-500"
+                                onClick={togglePasswordVisibility}
+                            >
+                                {showPassword ? <AiFillEyeInvisible size={24} /> : <AiFillEye size={24} />}
+                            </div>
                         </div>
                         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
                         <button
@@ -130,7 +142,7 @@ const Login = () => {
                     </form>
                     <p className="mt-4 text-center text-gray-600">
                         Don't have an account?{' '}
-                        <Link to="/signup" className="text-blue-600 hover:underline">
+                        <Link to="/choose" className="text-blue-600 hover:underline">
                             Sign Up
                         </Link>
                     </p>
@@ -151,4 +163,3 @@ const Login = () => {
 };
 
 export default Login;
-

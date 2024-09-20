@@ -19,7 +19,7 @@ const Navigation = ({ userRole, toggleLogin }) => (
         ) : (
           <>
             <li><Link to="/login" className="hover:text-blue-300">Login</Link></li>
-            <li><Link to="/signup" className="hover:text-blue-300">Sign Up</Link></li>
+            <li><Link to="/choose" className="hover:text-blue-300">Sign Up</Link></li>
           </>
         )}
       </ul>

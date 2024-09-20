@@ -18,13 +18,12 @@ const About = ({ userRole, onLogout }) => {
                         <li><Link to="/" className="hover:text-blue-300">Home</Link></li>
                         <li><Link to="/about" className="bg-blue-600 px-3 py-1 rounded-md">About</Link></li>
                         <li><Link to="/services" className="hover:text-blue-300">Services</Link></li>
-                        <li><Link to="/report" className="hover:text-blue-300">Report</Link></li>
-                        <li><Link to="/track" className="hover:text-blue-300">Track</Link></li>
-                        <li><Link to="/contact" className="hover:text-blue-300">Contact</Link></li>
+                
+                        <li><Link to="/help" className="hover:text-blue-300">Help</Link></li>
                         {!userRole ? (
                             <>
                                 <li><Link to="/login" className="hover:text-blue-300">Login</Link></li>
-                                <li><Link to="/signup" className="hover:text-blue-300">Sign Up</Link></li>
+                                <li><Link to="/choose" className="hover:text-blue-300">Sign Up</Link></li>
                             </>
                         ) : (
                             <>

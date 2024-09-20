@@ -1,9 +1,65 @@
-// src/pages/LeaderDashboard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
+
+// Register necessary components for Bar chart
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const LeaderDashboard = () => {
-    // Sample data
+    // Sample data for the bar chart
+    const data = {
+        labels: ['2020', '2021', '2022', '2023'],  // X-axis labels (Years)
+        datasets: [
+            {
+                label: 'Resolved Issues',
+                data: [120, 150, 170, 200],  // Resolved issues per year
+                backgroundColor: '#36A2EB',
+                hoverBackgroundColor: '#36A2EB',
+                borderWidth: 1,
+            },
+            {
+                label: 'Unresolved Issues',
+                data: [40, 35, 50, 30],  // Unresolved issues per year
+                backgroundColor: '#FF6384',
+                hoverBackgroundColor: '#FF6384',
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Leader Performance Overview (Resolved vs Unresolved Issues per Year)',
+            },
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Year',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Number of Issues',
+                },
+            },
+        },
+    };
+
+    // Sample data for reported issues
     const reportedIssues = [
         { id: 1, title: "Pothole on Main Street", status: "Resolved" },
         { id: 2, title: "Broken Streetlight at Elm Avenue", status: "In Progress" },
@@ -33,11 +89,6 @@ const LeaderDashboard = () => {
                             </Link>
                         </li>
                         <li>
-                            <Link to="/leader-performance" className="bg-blue-600 px-3 py-1 rounded-md text-white">
-                                Performance Analytics
-                            </Link>
-                        </li>
-                        <li>
                             <Link to="/about" className="hover:text-blue-300">
                                 About Us
                             </Link>
@@ -64,9 +115,23 @@ const LeaderDashboard = () => {
                     <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
                         Leader Dashboard
                     </h1>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 
-                        {/* Card 1: Backlogs */}
+                    {/* Flexbox Layout for Bar Chart and Backlogs */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        {/* Bar Chart Section */}
+                        <div className="bg-white p-6 rounded-lg shadow-md">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                                Performance Overview by Year
+                            </h3>
+                            <div className="mt-4 flex justify-center">
+                                <div style={{ width: '100%', height: '300px' }}>
+                                    <Bar data={data} options={options} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Backlogs Section */}
                         <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition">
                             <h3 className="text-xl font-bold text-red-600 mb-4">
                                 🚨 Attention Required: Backlogs
@@ -85,35 +150,6 @@ const LeaderDashboard = () => {
                             ) : (
                                 <p className="text-green-600 mt-4">All issues have been resolved!</p>
                             )}
-                        </div>
-
-                        {/* Card 2: Leader Performance */}
-                        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                Leader Performance
-                            </h3>
-                            <p className="text-gray-600">
-                                See how many issues you have resolved.
-                            </p>
-                            <div className="mt-4">
-                                <p className="text-lg font-semibold text-blue-600">
-                                    Resolved Issues: 150
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Card 3: Reported Issues */}
-                        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                Reported Issues
-                            </h3>
-                            <ul className="list-disc pl-5 space-y-2">
-                                {reportedIssues.map(issue => (
-                                    <li key={issue.id} className="text-gray-700">
-                                        <strong>{issue.title}</strong> - <span className={`font-semibold ${issue.status === 'Resolved' ? 'text-green-600' : issue.status === 'In Progress' ? 'text-yellow-600' : 'text-red-600'}`}>{issue.status}</span>
-                                    </li>
-                                ))}
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -139,5 +175,3 @@ const LeaderDashboard = () => {
 };
 
 export default LeaderDashboard;
-
-

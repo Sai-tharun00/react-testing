@@ -4,12 +4,14 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { setDoc, doc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai'; // Eye icons
 
 const Signup = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [fname, setFname] = useState("");
     const [lname, setLname] = useState("");
+    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
     const navigate = useNavigate(); // Hook for navigation
 
     const handleSubmit = async (e) => {
@@ -40,6 +42,11 @@ const Signup = () => {
         }
     };
 
+    // Toggle password visibility
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className="bg-gray-100 font-sans">
             <header className="bg-gray-900 text-white shadow-lg">
@@ -49,9 +56,7 @@ const Signup = () => {
                         <li><Link to="/" className="hover:text-blue-300">Home</Link></li>
                         <li><Link to="/about" className="hover:text-blue-300">About</Link></li>
                         <li><Link to="/services" className="hover:text-blue-300">Services</Link></li>
-                        <li><Link to="/report" className="hover:text-blue-300">Report</Link></li>
-                        <li><Link to="/track" className="hover:text-blue-300">Track</Link></li>
-                        <li><Link to="/contact" className="hover:text-blue-300">Contact</Link></li>
+                        <li><Link to="/help" className="hover:text-blue-300">Help</Link></li>
                     </ul>
                 </nav>
             </header>
@@ -102,10 +107,10 @@ const Signup = () => {
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
                                     </div>
-                                    <div className="mb-4">
+                                    <div className="mb-4 relative">
                                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                                         <input
-                                            type="password"
+                                            type={showPassword ? 'text' : 'password'}
                                             id="password"
                                             name="password"
                                             placeholder="Password"
@@ -114,6 +119,13 @@ const Signup = () => {
                                             onChange={(e) => setPassword(e.target.value)}
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
+                                        {/* Eye Icon */}
+                                        <div
+                                            className="absolute right-3 top-8 cursor-pointer text-gray-500"
+                                            onClick={togglePasswordVisibility}
+                                        >
+                                            {showPassword ? <AiFillEyeInvisible size={24} /> : <AiFillEye size={24} />}
+                                        </div>
                                     </div>
                                     <button
                                         type="submit"
@@ -122,6 +134,12 @@ const Signup = () => {
                                         Sign Up
                                     </button>
                                 </form>
+                                <p className="mt-4 text-center text-gray-600">
+                                    Already have an account?{' '}
+                                    <Link to="/login" className="text-blue-600 hover:underline">
+                                        login
+                                    </Link>
+                                </p>
                             </div>
                         </div>
                     </div>

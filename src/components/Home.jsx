@@ -10,7 +10,6 @@ const Navigation = ({ userRole, toggleLogin }) => (
         <li><Link to="/about" className="hover:text-blue-300">About</Link></li>
         <li><Link to="/services" className="hover:text-blue-300">Services</Link></li>
         <li><Link to="/help" className="hover:text-blue-300">Help</Link></li>
-        <li><Link to="/status/:issueId" className="hover:text-blue-300">Status</Link></li>
         {userRole ? (
           <li><button onClick={toggleLogin} className="hover:text-blue-300">Logout</button></li>
         ) : (
@@ -67,12 +66,7 @@ const CallToActionSection = () => (
       <p className="mb-6">
         Be a part of the change and help improve your community with the power of connection.
       </p>
-      <Link
-        to="/signup"
-        className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-500 transition"
-      >
-        Sign Up
-      </Link>
+    
     </div>
   </section>
 );

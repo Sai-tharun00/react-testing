@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { setDoc, doc } from 'firebase/firestore';
 import { toast } from 'react-toastify';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 
 const LeaderSignup = () => {
     const [email, setEmail] = useState("");
@@ -12,8 +13,9 @@ const LeaderSignup = () => {
     const [lname, setLname] = useState("");
     const [department, setDepartment] = useState("");
     const [position, setPosition] = useState("");
-    const [photo, setPhoto] = useState(null); // To handle photo upload
-    const navigate = useNavigate(); // Hook for navigation
+    const [photo, setPhoto] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,11 +23,9 @@ const LeaderSignup = () => {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Prepare photo URL if a photo is uploaded
             let photoUrl = "";
             if (photo) {
-                // Upload photo and get URL (mocked here)
-                // You should implement photo upload logic to Firebase Storage
+                // Upload photo logic should be implemented here
                 photoUrl = URL.createObjectURL(photo); // Mocked URL
             }
 
@@ -52,6 +52,10 @@ const LeaderSignup = () => {
         }
     };
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(prev => !prev);
+    };
+
     return (
         <div className="bg-gray-100 font-sans">
             <header className="bg-gray-900 text-white shadow-lg">
@@ -61,9 +65,8 @@ const LeaderSignup = () => {
                         <li><Link to="/" className="hover:text-blue-300">Home</Link></li>
                         <li><Link to="/about" className="hover:text-blue-300">About</Link></li>
                         <li><Link to="/services" className="hover:text-blue-300">Services</Link></li>
-                        <li><Link to="/report" className="hover:text-blue-300">Report</Link></li>
-                        <li><Link to="/track" className="hover:text-blue-300">Track</Link></li>
-                        <li><Link to="/contact" className="hover:text-blue-300">Contact</Link></li>
+                      
+                        <li><Link to="/help" className="hover:text-blue-300">Help</Link></li>
                     </ul>
                 </nav>
             </header>
@@ -115,10 +118,10 @@ const LeaderSignup = () => {
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
                                     </div>
-                                    <div className="mb-4">
+                                    <div className="relative mb-4">
                                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                                         <input
-                                            type="password"
+                                            type={showPassword ? "text" : "password"}
                                             id="password"
                                             name="password"
                                             placeholder="Password"
@@ -127,6 +130,12 @@ const LeaderSignup = () => {
                                             onChange={(e) => setPassword(e.target.value)}
                                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         />
+                                        <div
+                                            className="absolute right-3 top-8 cursor-pointer text-gray-500"
+                                            onClick={togglePasswordVisibility}
+                                        >
+                                            {showPassword ? <AiFillEyeInvisible size={24} /> : <AiFillEye size={24} />}
+                                        </div>
                                     </div>
                                     <div className="mb-4">
                                         <label htmlFor="photo" className="block text-sm font-medium text-gray-700">Profile Picture</label>

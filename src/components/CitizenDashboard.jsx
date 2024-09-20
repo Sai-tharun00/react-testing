@@ -2,15 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const CitizenDashboard = () => {
-    // Example streak data
-    const streakInfo = {
-        days: 5,
-        achievements: [
-            { title: "First Report", description: "Reported your first issue." },
-            { title: "5 Days Streak", description: "Maintained a reporting streak for 5 days." },
-        ],
-    };
-
     // Example reported issues data
     const reportedIssues = [
         {
@@ -35,7 +26,6 @@ const CitizenDashboard = () => {
 
     // Example top citizens data
     const topCitizens = [
-
         { name: "Samuel Green", streak: "15 Days", reports: 12 },
         { name: "John Doe", streak: "12 Days", reports: 10 },
         { name: "Jane Smith", streak: "8 Days", reports: 8 },
@@ -98,32 +88,8 @@ const CitizenDashboard = () => {
                         Citizen Dashboard
                     </h1>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Card 1: Citizen Streaks */}
-                        <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                Citizen Streaks
-                            </h3>
-                            <p className="text-gray-600 mb-4">
-                                View your streaks and achievements for reporting issues.
-                            </p>
-                            <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
-                                <p className="text-lg font-semibold text-blue-600 mb-2">
-                                    Streak: {streakInfo.days} Days
-                                </p>
-                                <h4 className="text-md font-semibold text-gray-800 mb-2">
-                                    Achievements
-                                </h4>
-                                <ul className="list-disc pl-5">
-                                    {streakInfo.achievements.map((ach, index) => (
-                                        <li key={index} className="text-gray-700 mb-1">
-                                            <strong>{ach.title}:</strong> {ach.description}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* Card 2: Your Reports */}
+                        
+                        {/* Card 1: Your Reports */}
                         <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105">
                             <h3 className="text-xl font-semibold text-gray-800 mb-2">
                                 Your Reports
@@ -163,7 +129,7 @@ const CitizenDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Card 3: Top Citizens */}
+                        {/* Card 2: Top Citizens */}
                         <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition transform hover:scale-105">
                             <h3 className="text-xl font-semibold text-gray-800 mb-2">
                                 Top Citizens

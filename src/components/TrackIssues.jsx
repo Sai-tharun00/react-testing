@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const TrackIssues = ({ isAuthenticated, userRole }) => {
     const [issueId, setIssueId] = useState('');
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [result, setResult] = useState(null);
     const [error, setError] = useState('');
+    const navigate = useNavigate(); // Hook to programmatically navigate
 
     // Mock function to simulate issue search - replace with actual API call
     const searchIssue = async () => {
@@ -21,11 +19,10 @@ const TrackIssues = ({ isAuthenticated, userRole }) => {
             });
 
             if (response.ok) {
-                const data = await response.json();
-                setResult(data);
+                // Redirect to Status Page with the issue ID
+                navigate(`/status/${issueId}`);
             } else {
                 setError('Issue not found.');
-                setResult(null);
             }
         } catch (err) {
             setError('An error occurred while fetching the issue.');
@@ -36,6 +33,10 @@ const TrackIssues = ({ isAuthenticated, userRole }) => {
     // Handle form submission
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (issueId.trim() === '') {
+            setError('Please enter an Issue ID.');
+            return;
+        }
         searchIssue();
     };
 
@@ -111,30 +112,6 @@ const TrackIssues = ({ isAuthenticated, userRole }) => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                             />
                         </div>
-                        <div className="mb-4">
-                            <label htmlFor="title" className="block text-lg font-semibold text-gray-800 mb-2">
-                                Title
-                            </label>
-                            <input
-                                type="text"
-                                id="title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="description" className="block text-lg font-semibold text-gray-800 mb-2">
-                                Description
-                            </label>
-                            <textarea
-                                id="description"
-                                rows="4"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            ></textarea>
-                        </div>
                         <button
                             type="submit"
                             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out"
@@ -143,19 +120,6 @@ const TrackIssues = ({ isAuthenticated, userRole }) => {
                         </button>
                         {error && <p className="text-red-500 text-center mt-4">{error}</p>}
                     </form>
-
-                    {/* Display search results */}
-                    {result && (
-                        <div className="bg-white p-8 rounded-lg shadow-md">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4">Issue Details</h2>
-                            <p><strong>Issue ID:</strong> {result.id}</p>
-                            <p><strong>Title:</strong> {result.title}</p>
-                            <p><strong>Status:</strong> {result.status}</p>
-                            <p><strong>Category:</strong> {result.category}</p>
-                            <p><strong>Description:</strong> {result.description}</p>
-                            <p><strong>Location:</strong> {result.location}</p>
-                        </div>
-                    )}
                 </div>
             </section>
         </div>
@@ -163,6 +127,10 @@ const TrackIssues = ({ isAuthenticated, userRole }) => {
 };
 
 export default TrackIssues;
+
+
+
+
 
 
 

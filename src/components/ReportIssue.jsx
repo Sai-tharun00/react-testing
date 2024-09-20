@@ -1,20 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { db, storage } from './firebase';
+import { db, storage } from './firebase'; // Firebase imports
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-toastify';
 
+const states = {
+    Maharashtra: ['Mumbai', 'Pune'],
+    Karnataka: ['Bengaluru', 'Mysuru'],
+    Telangana: ['Hyderabad', 'Warangal'],
+    Kerala: ['Thiruvananthapuram', 'Kochi'],
+    Delhi: ['New Delhi', 'Dwarka'],
+};
+
+const districts = {
+    Mumbai: ['South Mumbai', 'Bandra'],
+    Pune: ['Hinjewadi', 'Kothrud'],
+    Bengaluru: ['Whitefield', 'Koramangala'],
+    Mysuru: ['Jayanagar', 'Vijayanagar'],
+    Hyderabad: ['Banjara Hills', 'Secunderabad'],
+    Warangal: ['Hanamkonda', 'Kazipet'],
+    Thiruvananthapuram: ['Kowdiar', 'Pettah'],
+    Kochi: ['Ernakulam', 'Fort Kochi'],
+    Delhi: ['Connaught Place', 'Karol Bagh'],
+    Dwarka: ['Dwarka Sector 21', 'Dwarka Sector 12'],
+};
+
+const areas = {
+    'South Mumbai': ['Colaba', 'Marine Drive'],
+    Bandra: ['Bandra West', 'Bandra East'],
+    Hinjewadi: ['Phase 1', 'Phase 2'],
+    Kothrud: ['Kothrud Depot', 'Paud Road'],
+    'Whitefield': ['ITPL', 'Hope Farm Junction'],
+    'Koramangala': ['1st Block', '4th Block'],
+    Jayanagar: ['4th Block', '7th Block'],
+    'Vijayanagar': ['8th Stage', '2nd Stage'],
+    'Connaught Place': ['Inner Circle', 'Outer Circle'],
+    'Karol Bagh': ['Ajmal Khan Road', 'Paharganj'],
+    'Dwarka Sector 21': ['IGI Airport', 'Sector 21'],
+    'Dwarka Sector 12': ['Sector 12 Market', 'Dwarka Sector 12'],
+};
+
 const ReportIssue = ({ isAuthenticated, userRole }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [location, setLocation] = useState('');
+    const [location, setLocation] = useState({ state: '', district: '', area: '' });
     const [category, setCategory] = useState('pothole');
     const [image, setImage] = useState(null);
     const [errors, setErrors] = useState({});
     const [leaders, setLeaders] = useState([]);
     const [selectedLeaders, setSelectedLeaders] = useState([]);
+    const [suggestedStates, setSuggestedStates] = useState([]);
+    const [suggestedDistricts, setSuggestedDistricts] = useState([]);
+    const [suggestedAreas, setSuggestedAreas] = useState([]);
 
+    // Fetching leaders based on the selected category
     useEffect(() => {
         const fetchLeaders = async () => {
             try {
@@ -28,19 +68,47 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                 }));
                 setLeaders(fetchedLeaders);
             } catch (error) {
-                console.error("Error fetching leaders:", error);
+                console.error('Error fetching leaders:', error);
             }
         };
 
         fetchLeaders();
     }, [category]);
 
+    // Handling location suggestions and updates
+    const handleLocationChange = (e, type) => {
+        const value = e.target.value;
+
+        setLocation(prevLocation => ({
+            ...prevLocation,
+            [type]: value,
+        }));
+
+        if (type === 'state') {
+            setSuggestedStates(Object.keys(states).filter(state => state.toLowerCase().includes(value.toLowerCase())));
+            setSuggestedDistricts([]);
+            setSuggestedAreas([]);
+        }
+
+        if (type === 'district' && location.state) {
+            const districtList = states[location.state] || [];
+            setSuggestedDistricts(districtList.filter(district => district.toLowerCase().includes(value.toLowerCase())));
+            setSuggestedAreas([]);
+        }
+
+        if (type === 'area' && location.district) {
+            const areaList = districts[location.district] || [];
+            setSuggestedAreas(areaList.filter(area => area.toLowerCase().includes(value.toLowerCase())));
+        }
+    };
+
+    // Form validation logic
     const validateForm = () => {
         const newErrors = {};
 
         if (title.length < 5) newErrors.title = 'Title must be at least 5 characters long.';
         if (description.length < 10) newErrors.description = 'Description must be at least 10 characters long.';
-        if (location.length < 5) newErrors.location = 'Location must be at least 5 characters long.';
+        if (!location.state || !location.district || !location.area) newErrors.location = 'Please select a valid state, district, and area.';
         if (image) {
             const validImageTypes = ['image/jpeg', 'image/png'];
             if (!validImageTypes.includes(image.type)) newErrors.image = 'Please upload a valid image file (JPEG, PNG).';
@@ -52,6 +120,7 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
         return Object.keys(newErrors).length === 0;
     };
 
+    // Image upload to Firebase storage
     const handleImageUpload = async () => {
         if (image) {
             const imageRef = ref(storage, `images/${image.name}`);
@@ -61,15 +130,15 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
         return null;
     };
 
-    const handleSubmit = async (e) => {
+    // Submitting the form and saving the issue to Firestore
+    const handleSubmit = async e => {
         e.preventDefault();
         if (validateForm()) {
             try {
                 const imageUrl = await handleImageUpload();
-                const uniqueId = new Date().getTime().toString(); // Use timestamp as a unique ID
 
-                await addDoc(collection(db, 'issues'), {
-                    id: uniqueId,
+                // Add the new issue document to Firestore and get the document reference
+                const docRef = await addDoc(collection(db, 'issues'), {
                     title,
                     description,
                     location,
@@ -78,22 +147,29 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                     taggedLeaders: selectedLeaders,
                 });
 
-                toast.success('Your issue has been successfully reported!');
+                // Get the unique ID of the newly created document
+                const uniqueId = docRef.id;
+
+                // Display a success message with the unique ID
+                toast.success(`Issue with ID ${uniqueId} has been reported successfully!`);
+
+                // Reset form fields
                 setTitle('');
                 setDescription('');
-                setLocation('');
+                setLocation({ state: '', district: '', area: '' });
                 setCategory('pothole');
                 setImage(null);
                 setSelectedLeaders([]);
                 setErrors({});
             } catch (error) {
-                console.error("Error reporting issue:", error);
+                console.error('Error reporting issue:', error);
                 toast.error('There was an error reporting your issue.');
             }
         }
     };
 
-    const handleLeaderSelection = (e) => {
+    // Handling leader selection for tagging
+    const handleLeaderSelection = e => {
         const options = Array.from(e.target.selectedOptions);
         setSelectedLeaders(options.map(option => option.value));
     };
@@ -109,111 +185,158 @@ const ReportIssue = ({ isAuthenticated, userRole }) => {
                         <li><Link to="/track" className="hover:text-blue-300">Track Issues</Link></li>
                         {isAuthenticated && userRole === 'citizen' && <li><Link to="/citizendashboard" className="hover:text-blue-300">Citizen Dashboard</Link></li>}
                         {isAuthenticated && userRole === 'leader' && <li><Link to="/leaderdashboard" className="hover:text-blue-300">Leader Dashboard</Link></li>}
-                        <li><Link to="/about" className="hover:text-blue-300">About Us</Link></li>
-                        <li><Link to="/contact" className="hover:text-blue-300">Contact Us</Link></li>
+                        <li><Link to="/about" className="hover:text-blue-300">About</Link></li>
+                        <li><Link to="/contact" className="hover:text-blue-300">Contact</Link></li>
                     </ul>
-                    <div className="profile">
-                        <img src="/profile-icon.png" alt="Profile" className="w-8 h-8 rounded-full" />
-                    </div>
                 </nav>
             </header>
 
-            <section className="py-12 bg-gray-100">
-                <div className="container mx-auto px-6">
-                    <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">Report an Issue</h1>
-                    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md">
-                        <div className="mb-4">
-                            <label htmlFor="title" className="block text-lg font-semibold text-gray-800 mb-2">Issue Title</label>
-                            <input
-                                type="text"
-                                id="title"
-                                name="title"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                className={`w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.title ? 'border-red-500' : ''}`}
-                            />
-                            {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+            <main className="container mx-auto px-6 py-10">
+                <h1 className="text-3xl font-bold mb-6">Report an Issue</h1>
+                <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
+                    {/* Title Field */}
+                    <div className="mb-4">
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
+                        <input
+                            type="text"
+                            id="title"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${errors.title ? 'border-red-500' : ''}`}
+                        />
+                        {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+                    </div>
+
+                    {/* Description Field */}
+                    <div className="mb-4">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea
+                            id="description"
+                            value={description}
+                            onChange={e => setDescription(e.target.value)}
+                            className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${errors.description ? 'border-red-500' : ''}`}
+                        />
+                        {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
+                    </div>
+
+                    {/* Location Field */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">Location</label>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div>
+                                <input
+                                    type="text"
+                                    placeholder="State"
+                                    value={location.state}
+                                    onChange={e => handleLocationChange(e, 'state')}
+                                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${errors.location ? 'border-red-500' : ''}`}
+                                />
+                                <ul className="mt-1">
+                                    {suggestedStates.map(state => (
+                                        <li key={state} className="cursor-pointer" onClick={() => setLocation({ ...location, state })}>
+                                            {state}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div>
+                                <input
+                                    type="text"
+                                    placeholder="District"
+                                    value={location.district}
+                                    onChange={e => handleLocationChange(e, 'district')}
+                                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${errors.location ? 'border-red-500' : ''}`}
+                                />
+                                <ul className="mt-1">
+                                    {suggestedDistricts.map(district => (
+                                        <li key={district} className="cursor-pointer" onClick={() => setLocation({ ...location, district })}>
+                                            {district}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div>
+                                <input
+                                    type="text"
+                                    placeholder="Area"
+                                    value={location.area}
+                                    onChange={e => handleLocationChange(e, 'area')}
+                                    className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${errors.location ? 'border-red-500' : ''}`}
+                                />
+                                <ul className="mt-1">
+                                    {suggestedAreas.map(area => (
+                                        <li key={area} className="cursor-pointer" onClick={() => setLocation({ ...location, area })}>
+                                            {area}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         </div>
-                        <div className="mb-4">
-                            <label htmlFor="description" className="block text-lg font-semibold text-gray-800 mb-2">Description</label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                rows="4"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                className={`w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.description ? 'border-red-500' : ''}`}
-                            ></textarea>
-                            {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="category" className="block text-lg font-semibold text-gray-800 mb-2">Category</label>
-                            <select
-                                id="category"
-                                name="category"
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            >
-                                <option value="pothole">Pothole</option>
-                                <option value="garbage">Garbage</option>
-                                <option value="streetlight">Streetlight</option>
-                            </select>
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="location" className="block text-lg font-semibold text-gray-800 mb-2">Location</label>
-                            <input
-                                type="text"
-                                id="location"
-                                name="location"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                className={`w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none ${errors.location ? 'border-red-500' : ''}`}
-                            />
-                            {errors.location && <p className="text-red-500 text-sm">{errors.location}</p>}
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="image" className="block text-lg font-semibold text-gray-800 mb-2">Upload Image</label>
-                            <input
-                                type="file"
-                                id="image"
-                                name="image"
-                                accept="image/jpeg, image/png"
-                                onChange={(e) => setImage(e.target.files[0])}
-                                className={`w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm ${errors.image ? 'border-red-500' : ''}`}
-                            />
-                            {errors.image && <p className="text-red-500 text-sm">{errors.image}</p>}
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="leaders" className="block text-lg font-semibold text-gray-800 mb-2">Tag Leaders</label>
-                            <select
-                                id="leaders"
-                                name="leaders"
-                                multiple
-                                value={selectedLeaders}
-                                onChange={handleLeaderSelection}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            >
-                                {leaders.map(leader => (
-                                    <option key={leader.id} value={leader.id}>
-                                        {leader.position} - {leader.category}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            Report Issue
-                        </button>
-                    </form>
-                </div>
-            </section>
+                        {errors.location && <p className="text-red-500 text-sm">{errors.location}</p>}
+                    </div>
+
+                    {/* Category Field */}
+                    <div className="mb-4">
+                        <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+                        <select
+                            id="category"
+                            value={category}
+                            onChange={e => setCategory(e.target.value)}
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                        >
+                            <option value="pothole">Pothole</option>
+                            <option value="garbage">Garbage</option>
+                            <option value="streetlight">Streetlight</option>
+                        </select>
+                    </div>
+
+                    {/* Image Upload Field */}
+                    <div className="mb-4">
+                        <label htmlFor="image" className="block text-sm font-medium text-gray-700">Upload Image</label>
+                        <input
+                            type="file"
+                            id="image"
+                            accept="image/jpeg, image/png"
+                            onChange={e => setImage(e.target.files[0])}
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                        />
+                        {errors.image && <p className="text-red-500 text-sm">{errors.image}</p>}
+                    </div>
+
+                    {/* Leader Tagging Field */}
+                    <div className="mb-4">
+                        <label htmlFor="leaders" className="block text-sm font-medium text-gray-700">Tag Leaders</label>
+                        <select
+                            multiple
+                            id="leaders"
+                            value={selectedLeaders}
+                            onChange={handleLeaderSelection}
+                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                        >
+                            {leaders.map(leader => (
+                                <option key={leader.id} value={leader.id}>
+                                    {leader.position} - {leader.category}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        className="bg-blue-600 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-700"
+                    >
+                        Submit Issue
+                    </button>
+                </form>
+            </main>
         </div>
     );
 };
 
 export default ReportIssue;
-
-
 
 
 

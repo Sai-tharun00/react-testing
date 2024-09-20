@@ -1,22 +1,69 @@
 // src/pages/LeaderPerformanceChart.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
 
-ChartJS.register(Title, Tooltip, Legend, ArcElement);
+// Register necessary components for Bar chart
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const LeaderPerformanceChart = () => {
-    // Sample data for the chart
+    // Sample data for the bar chart
     const data = {
-        labels: ['Resolved Issues', 'Unresolved Issues'],
+        labels: ['2020', '2021', '2022', '2023'],  // X-axis labels (Years)
         datasets: [
             {
-                data: [150, 30],  // Replace with actual data from Firestore
-                backgroundColor: ['#36A2EB', '#FF6384'],
-                hoverBackgroundColor: ['#36A2EB', '#FF6384'],
+                label: 'Resolved Issues',
+                data: [120, 150, 170, 200],  // Resolved issues per year
+                backgroundColor: '#36A2EB',
+                hoverBackgroundColor: '#36A2EB',
+                borderWidth: 1,
+            },
+            {
+                label: 'Unresolved Issues',
+                data: [40, 35, 50, 30],  // Unresolved issues per year
+                backgroundColor: '#FF6384',
+                hoverBackgroundColor: '#FF6384',
+                borderWidth: 1,
             },
         ],
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,  // Ensure the chart size is flexible
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: 'Leader Performance Overview (Resolved vs Unresolved Issues per Year)',
+            },
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Year',
+                },
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 10,  // Tighter step size for more granular detail
+                    callback: function (value) {
+                        return value;  // Display the raw value on Y-axis
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Number of Issues',
+                },
+            },
+        },
     };
 
     return (
@@ -59,7 +106,7 @@ const LeaderPerformanceChart = () => {
                 </nav>
             </header>
 
-            {/* Leader Performance Chart Section */}
+            {/* Leader Performance Bar Chart Section */}
             <section className="py-12 bg-gray-100">
                 <div className="container mx-auto px-6">
                     <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">
@@ -67,12 +114,12 @@ const LeaderPerformanceChart = () => {
                     </h1>
                     <div className="bg-white p-6 rounded-lg shadow-md">
                         <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                            Performance Overview
+                            Performance Overview by Year
                         </h3>
                         <div className="mt-4 flex justify-center">
-                            {/* Reduced chart size */}
-                            <div style={{ maxWidth: '400px', maxHeight: '400px' }}>
-                                <Pie data={data} width={200} height={200} />
+                            {/* Slightly reduced chart size */}
+                            <div style={{ width: '900px', height: '450px' }}>  {/* Adjusted width and height */}
+                                <Bar data={data} options={options} />
                             </div>
                         </div>
                     </div>
@@ -99,5 +146,11 @@ const LeaderPerformanceChart = () => {
 };
 
 export default LeaderPerformanceChart;
+
+
+
+
+
+
 
 

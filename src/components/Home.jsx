@@ -10,7 +10,8 @@ const Navigation = ({ userRole, toggleLogin }) => (
                 <li><Link to="/" className="hover:text-blue-300">Home</Link></li>
                 <li><Link to="/about" className="hover:text-blue-300">About</Link></li>
                 <li><Link to="/services" className="hover:text-blue-300">Services</Link></li>
-                <li><Link to="/contact" className="hover:text-blue-300">Contact</Link></li>
+                <li><Link to="/help" className="hover:text-blue-300">Help</Link></li>
+                <li><Link to="/status/:issueId" className="hover:text-blue-300">Status</Link></li> {/* Added Status link */}
                 {userRole ? (
                     <li><button onClick={toggleLogin} className="hover:text-blue-300">Logout</button></li>
                 ) : (
@@ -113,6 +114,7 @@ const Home = () => {
 };
 
 export default Home;
+
 
 
 
